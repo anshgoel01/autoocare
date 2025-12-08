@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ServiceCenterLayout from '@/components/layouts/ServiceCenterLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,6 +23,7 @@ import {
 import { format } from 'date-fns';
 
 export default function ServiceCenterDashboard() {
+  const navigate = useNavigate();
   const todayBookings = serviceBookings.filter(b => b.date === '2024-12-07');
   const pendingBookings = serviceBookings.filter(b => b.status === 'pending');
   const lowStockItems = inventoryItems.filter(i => getInventoryStatus(i.stock, i.minStock) !== 'in-stock');
@@ -115,7 +116,7 @@ export default function ServiceCenterDashboard() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>Today's Appointments</CardTitle>
-              <Button variant="outline" size="sm">View All</Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/service-center-dashboard/bookings')}>View All</Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -155,7 +156,7 @@ export default function ServiceCenterDashboard() {
                 <AlertTriangle className="w-5 h-5 text-warning" />
                 Inventory Alerts
               </CardTitle>
-              <Button variant="outline" size="sm">Manage Inventory</Button>
+              <Button variant="outline" size="sm" onClick={() => navigate('/service-center-dashboard/inventory')}>Manage Inventory</Button>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
