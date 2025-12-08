@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import HealthScoreMeter from '@/components/dashboard/HealthScoreMeter';
 import ComponentHealthBar from '@/components/dashboard/ComponentHealthBar';
 import TelemetryGauge from '@/components/dashboard/TelemetryGauge';
@@ -11,10 +11,11 @@ import {
   vehicleHealth, 
   telemetryData, 
   mlPredictions, 
-  serviceCenters, 
   serviceHistory,
   userProfile,
 } from '@/data/mockData';
+import { useServiceCenters } from '@/contexts/ServiceCentersContext';
+import { useUserBookings } from '@/contexts/UserBookingsContext';
 import { 
   Thermometer, 
   Battery, 
@@ -24,11 +25,16 @@ import {
   AlertTriangle,
   Droplets,
   Wind,
+  Eye,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 
 export default function UserDashboard() {
+  const navigate = useNavigate();
+  const { serviceCenters } = useServiceCenters();
+  const { hasActiveBooking, nextBooking } = useUserBookings();
+  
   const daysUntilService = differenceInDays(
     new Date(vehicleHealth.nextServiceDate), 
     new Date()
@@ -49,18 +55,40 @@ export default function UserDashboard() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm text-primary-foreground/70">Next Service</p>
-                <p className="font-semibold">{daysUntilService} days</p>
-              </div>
-              <Button variant="secondary" className="bg-white/20 hover:bg-white/30 text-white border-0">
-                <Calendar className="w-4 h-4 mr-2" />
-                Schedule Now
-              </Button>
+              {hasActiveBooking && nextBooking ? (
+                <>
+                  <div className="text-right">
+                    <p className="text-sm text-primary-foreground/70">Upcoming Service</p>
+                    <p className="font-semibold">{format(new Date(nextBooking.date), 'MMM d')} at {nextBooking.time}</p>
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    className="bg-white/20 hover:bg-white/30 text-white border-0"
+                    onClick={() => navigate('/dashboard/history')}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Booking
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <div className="text-right">
+                    <p className="text-sm text-primary-foreground/70">Next Service</p>
+                    <p className="font-semibold">{daysUntilService} days</p>
+                  </div>
+                  <Button 
+                    variant="secondary" 
+                    className="bg-white/20 hover:bg-white/30 text-white border-0"
+                    onClick={() => navigate('/dashboard/service-centers')}
+                  >
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Schedule Now
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
-
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Health Score Card */}
@@ -182,10 +210,10 @@ export default function UserDashboard() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Nearby Service Centers</h2>
-            <Button variant="outline" size="sm">View Map</Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/service-centers')}>View All</Button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {serviceCenters.map((center) => (
+            {serviceCenters.slice(0, 3).map((center) => (
               <ServiceCenterCard key={center.id} center={center} />
             ))}
           </div>

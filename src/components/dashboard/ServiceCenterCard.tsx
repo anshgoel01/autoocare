@@ -7,8 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Star, MapPin, Phone, Clock, Navigation } from 'lucide-react';
+import { useUserBookings } from '@/contexts/UserBookingsContext';
+import { Star, MapPin, Phone, Clock, Navigation, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useNavigate } from 'react-router-dom';
 
 interface ServiceCenterCardProps {
   center: {
@@ -34,6 +36,13 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
     notes: '',
   });
   const { toast } = useToast();
+  const { addBooking, bookings } = useUserBookings();
+  const navigate = useNavigate();
+
+  // Check if there's an active booking for this center
+  const hasActiveBookingAtCenter = bookings.some(
+    b => b.centerId === center.id && (b.status === 'confirmed' || b.status === 'pending')
+  );
 
   const getAvailabilityConfig = () => {
     switch (center.availability) {
@@ -58,8 +67,17 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
       return;
     }
 
+    addBooking({
+      centerId: center.id,
+      centerName: center.name,
+      service: bookingData.service,
+      date: bookingData.date,
+      time: bookingData.time,
+      notes: bookingData.notes,
+    });
+
     toast({
-      title: 'Booking Submitted!',
+      title: 'Booking Confirmed!',
       description: `Your appointment at ${center.name} has been scheduled for ${bookingData.date} at ${bookingData.time}`,
     });
     setBookingOpen(false);
@@ -121,12 +139,23 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
           </div>
         </div>
 
-        <Button 
-          className="w-full" 
-          onClick={() => setBookingOpen(true)}
-        >
-          Book Service
-        </Button>
+        {hasActiveBookingAtCenter ? (
+          <Button 
+            className="w-full" 
+            variant="secondary"
+            onClick={() => navigate('/dashboard/history')}
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            View Booking
+          </Button>
+        ) : (
+          <Button 
+            className="w-full" 
+            onClick={() => setBookingOpen(true)}
+          >
+            Book Service
+          </Button>
+        )}
       </div>
 
       <Dialog open={bookingOpen} onOpenChange={setBookingOpen}>
