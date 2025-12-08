@@ -15,7 +15,22 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
 type BookingStatus = 'confirmed' | 'pending' | 'in-progress' | 'completed' | 'cancelled';
-type Booking = typeof serviceBookings[0] & { status: BookingStatus };
+
+interface Booking {
+  id: string;
+  customer: string;
+  email: string;
+  phone: string;
+  vehicle: string;
+  registration: string;
+  service: string;
+  date: string;
+  time: string;
+  status: BookingStatus;
+  technician: string | null;
+  notes: string;
+  estimatedDuration: number;
+}
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>(serviceBookings as Booking[]);

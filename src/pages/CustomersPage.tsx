@@ -141,10 +141,10 @@ export default function CustomersPage() {
           {/* Today's Customer Cards */}
           <div className="space-y-4">
             <h2 className="text-lg font-semibold">
-              Today's Customers ({todayBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled').length})
+              Today's Customers ({todayBookings.filter(b => (b.status as string) !== 'completed' && (b.status as string) !== 'cancelled').length})
             </h2>
             
-            {todayBookings.filter(b => b.status !== 'completed' && b.status !== 'cancelled').length === 0 ? (
+            {todayBookings.filter(b => (b.status as string) !== 'completed' && (b.status as string) !== 'cancelled').length === 0 ? (
               <Card>
                 <CardContent className="pt-6 text-center text-muted-foreground">
                   No active customers for today
@@ -152,7 +152,7 @@ export default function CustomersPage() {
               </Card>
             ) : (
               todayBookings
-                .filter(b => b.status !== 'completed' && b.status !== 'cancelled')
+                .filter(b => (b.status as string) !== 'completed' && (b.status as string) !== 'cancelled')
                 .sort((a, b) => a.time.localeCompare(b.time))
                 .map((booking) => (
                   <Card key={booking.id} className="overflow-hidden">
