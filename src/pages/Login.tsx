@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,14 +140,22 @@ export default function Login() {
             </form>
           </Tabs>
           
-          <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-xs text-center text-muted-foreground">
-              Demo credentials: Any email/password works
+          <div className="mt-6 pt-6 border-t border-border space-y-4">
+            <p className="text-sm text-center text-muted-foreground">
+              Don't have an account?{' '}
+              <Link to="/signup" className="text-primary hover:underline font-medium">
+                Sign Up
+              </Link>
             </p>
-            <div className="mt-2 flex justify-center gap-4 text-xs text-muted-foreground">
-              <span>user@demo.com</span>
-              <span className="text-border">|</span>
-              <span>service@demo.com</span>
+            <div className="pt-4 border-t border-border">
+              <p className="text-xs text-center text-muted-foreground">
+                Demo credentials: Any email/password works
+              </p>
+              <div className="mt-2 flex justify-center gap-4 text-xs text-muted-foreground">
+                <span>user@demo.com</span>
+                <span className="text-border">|</span>
+                <span>service@demo.com</span>
+              </div>
             </div>
           </div>
         </CardContent>
