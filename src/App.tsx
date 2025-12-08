@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { ServiceCentersProvider } from "@/contexts/ServiceCentersContext";
+import { UserBookingsProvider } from "@/contexts/UserBookingsContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Pages
@@ -123,13 +124,15 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <ServiceCentersProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <AppRoutes />
-          </BrowserRouter>
-        </TooltipProvider>
+        <UserBookingsProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </TooltipProvider>
+        </UserBookingsProvider>
       </ServiceCentersProvider>
     </AuthProvider>
   </QueryClientProvider>
