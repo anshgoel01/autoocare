@@ -4,10 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { ServiceCentersProvider } from "@/contexts/ServiceCentersContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 // Pages
 import Login from "./pages/Login";
+import SignUp from "./pages/SignUp";
 import UserDashboard from "./pages/UserDashboard";
 import ServiceCentersPage from "./pages/ServiceCentersPage";
 import ServiceHistoryPage from "./pages/ServiceHistoryPage";
@@ -25,13 +27,21 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Auth Route */}
+      {/* Auth Routes */}
       <Route 
         path="/" 
         element={
           isAuthenticated 
             ? <Navigate to={user?.role === 'user' ? '/dashboard' : '/service-center-dashboard'} replace />
             : <Login />
+        } 
+      />
+      <Route 
+        path="/signup" 
+        element={
+          isAuthenticated 
+            ? <Navigate to={user?.role === 'user' ? '/dashboard' : '/service-center-dashboard'} replace />
+            : <SignUp />
         } 
       />
 
@@ -112,13 +122,15 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <ServiceCentersProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </ServiceCentersProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

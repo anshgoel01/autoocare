@@ -4,10 +4,11 @@ import ServiceCenterCard from '@/components/dashboard/ServiceCenterCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { serviceCenters } from '@/data/mockData';
+import { useServiceCenters } from '@/contexts/ServiceCentersContext';
 import { Search, MapPin, Filter, List, Map } from 'lucide-react';
 
 export default function ServiceCentersPage() {
+  const { serviceCenters } = useServiceCenters();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedService, setSelectedService] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');

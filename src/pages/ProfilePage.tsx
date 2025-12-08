@@ -6,13 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { userProfile } from '@/data/mockData';
+import { useServiceCenters } from '@/contexts/ServiceCentersContext';
 import { useToast } from '@/hooks/use-toast';
-import { Camera, Edit2, Save, X, Car, User, MapPin, Mail, Phone } from 'lucide-react';
+import { Camera, Edit2, Save, X, Car, User, MapPin, Mail, Phone, Wrench } from 'lucide-react';
 
 export default function ProfilePage() {
+  const { serviceCenters } = useServiceCenters();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState(userProfile);
+  const [profile, setProfile] = useState({ ...userProfile, preferredServiceCenter: '' });
   const { toast } = useToast();
 
   const handleSave = () => {
@@ -24,7 +27,7 @@ export default function ProfilePage() {
   };
 
   const handleCancel = () => {
-    setProfile(userProfile);
+    setProfile({ ...userProfile, preferredServiceCenter: '' });
     setIsEditing(false);
   };
 
@@ -206,6 +209,43 @@ export default function ProfilePage() {
                 <p className="text-sm text-muted-foreground">Model</p>
                 <p className="font-semibold">{profile.vehicle.model}</p>
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Preferred Service Center */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wrench className="w-5 h-5" />
+              Preferred Service Center
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="preferredCenter">Select your preferred service center</Label>
+              <Select 
+                value={profile.preferredServiceCenter} 
+                onValueChange={(value) => setProfile({ ...profile, preferredServiceCenter: value })}
+                disabled={!isEditing}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose a service center" />
+                </SelectTrigger>
+                <SelectContent>
+                  {serviceCenters.map((center) => (
+                    <SelectItem key={center.id} value={center.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{center.name}</span>
+                        <span className="text-xs text-muted-foreground">({center.distance} mi)</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-muted-foreground">
+                Your preferred center will be shown first when booking services
+              </p>
             </div>
           </CardContent>
         </Card>
