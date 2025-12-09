@@ -4,9 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { ServiceCentersProvider } from "@/contexts/ServiceCentersContext";
-import { UserBookingsProvider } from "@/contexts/UserBookingsContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { Loader2 } from "lucide-react";
 
 // Pages
 import Login from "./pages/Login";
@@ -24,7 +23,15 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function AppRoutes() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -33,7 +40,7 @@ function AppRoutes() {
         path="/" 
         element={
           isAuthenticated 
-            ? <Navigate to={user?.role === 'user' ? '/dashboard' : '/service-center-dashboard'} replace />
+            ? <Navigate to={user?.role === 'vehicle_owner' ? '/dashboard' : '/service-center-dashboard'} replace />
             : <Login />
         } 
       />
@@ -41,7 +48,7 @@ function AppRoutes() {
         path="/signup" 
         element={
           isAuthenticated 
-            ? <Navigate to={user?.role === 'user' ? '/dashboard' : '/service-center-dashboard'} replace />
+            ? <Navigate to={user?.role === 'vehicle_owner' ? '/dashboard' : '/service-center-dashboard'} replace />
             : <SignUp />
         } 
       />
@@ -50,7 +57,7 @@ function AppRoutes() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute allowedRole="user">
+          <ProtectedRoute allowedRole="vehicle_owner">
             <UserDashboard />
           </ProtectedRoute>
         }
@@ -58,7 +65,7 @@ function AppRoutes() {
       <Route
         path="/dashboard/service-centers"
         element={
-          <ProtectedRoute allowedRole="user">
+          <ProtectedRoute allowedRole="vehicle_owner">
             <ServiceCentersPage />
           </ProtectedRoute>
         }
@@ -66,7 +73,7 @@ function AppRoutes() {
       <Route
         path="/dashboard/history"
         element={
-          <ProtectedRoute allowedRole="user">
+          <ProtectedRoute allowedRole="vehicle_owner">
             <ServiceHistoryPage />
           </ProtectedRoute>
         }
@@ -74,7 +81,7 @@ function AppRoutes() {
       <Route
         path="/dashboard/profile"
         element={
-          <ProtectedRoute allowedRole="user">
+          <ProtectedRoute allowedRole="vehicle_owner">
             <ProfilePage />
           </ProtectedRoute>
         }
@@ -84,7 +91,7 @@ function AppRoutes() {
       <Route
         path="/service-center-dashboard"
         element={
-          <ProtectedRoute allowedRole="service-center">
+          <ProtectedRoute allowedRole="service_center">
             <ServiceCenterDashboard />
           </ProtectedRoute>
         }
@@ -92,7 +99,7 @@ function AppRoutes() {
       <Route
         path="/service-center-dashboard/inventory"
         element={
-          <ProtectedRoute allowedRole="service-center">
+          <ProtectedRoute allowedRole="service_center">
             <InventoryPage />
           </ProtectedRoute>
         }
@@ -100,7 +107,7 @@ function AppRoutes() {
       <Route
         path="/service-center-dashboard/bookings"
         element={
-          <ProtectedRoute allowedRole="service-center">
+          <ProtectedRoute allowedRole="service_center">
             <BookingsPage />
           </ProtectedRoute>
         }
@@ -108,7 +115,7 @@ function AppRoutes() {
       <Route
         path="/service-center-dashboard/customers"
         element={
-          <ProtectedRoute allowedRole="service-center">
+          <ProtectedRoute allowedRole="service_center">
             <CustomersPage />
           </ProtectedRoute>
         }
@@ -123,17 +130,13 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ServiceCentersProvider>
-        <UserBookingsProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
-              <AppRoutes />
-            </BrowserRouter>
-          </TooltipProvider>
-        </UserBookingsProvider>
-      </ServiceCentersProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

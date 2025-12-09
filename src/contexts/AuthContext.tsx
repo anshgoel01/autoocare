@@ -1,6 +1,29 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
-export type UserRole = 'user' | 'service-center';
+export type UserRole = 'vehicle_owner' | 'service_center';
+
+interface Profile {
+  id: string;
+  role: UserRole;
+  full_name: string | null;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+}
+
+interface ServiceCenterData {
+  id: string;
+  name: string;
+}
+
+interface VehicleData {
+  id: string;
+  make: string;
+  model: string;
+  registration_number: string;
+}
 
 interface User {
   id: string;
@@ -8,68 +31,175 @@ interface User {
   name: string;
   role: UserRole;
   avatar?: string;
+  profile?: Profile;
+  serviceCenter?: ServiceCenterData;
+  vehicle?: VehicleData;
 }
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
-  logout: () => void;
+  isLoading: boolean;
+  signUp: (email: string, password: string, metadata: Record<string, unknown>) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const mockUsers: Record<string, User> = {
-  'user@demo.com': {
-    id: '1',
-    email: 'user@demo.com',
-    name: 'John Mitchell',
-    role: 'user',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-  },
-  'service@demo.com': {
-    id: '2',
-    email: 'service@demo.com',
-    name: 'AutoCare Center',
-    role: 'service-center',
-    avatar: 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop',
-  },
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem('autocare_user');
-    return saved ? JSON.parse(saved) : null;
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const login = useCallback(async (email: string, password: string, role: UserRole): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    // For demo, accept any email/password with selected role
-    const mockUser = mockUsers[email] || {
-      id: Math.random().toString(36).substr(2, 9),
-      email,
-      name: role === 'user' ? 'Demo User' : 'Demo Service Center',
-      role,
-      avatar: role === 'user' 
-        ? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face'
-        : 'https://images.unsplash.com/photo-1560179707-f14e90ef3623?w=100&h=100&fit=crop',
-    };
+  const fetchUserData = useCallback(async (supabaseUser: SupabaseUser) => {
+    try {
+      // Fetch profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .maybeSingle();
 
-    const userWithRole = { ...mockUser, role };
-    setUser(userWithRole);
-    localStorage.setItem('autocare_user', JSON.stringify(userWithRole));
-    return true;
+      if (!profile) {
+        return null;
+      }
+
+      const userData: User = {
+        id: supabaseUser.id,
+        email: supabaseUser.email || '',
+        name: profile.full_name || supabaseUser.email?.split('@')[0] || 'User',
+        role: profile.role as UserRole,
+        profile,
+      };
+
+      // If service center, fetch service center data
+      if (profile.role === 'service_center') {
+        const { data: serviceCenter } = await supabase
+          .from('service_centers')
+          .select('id, name')
+          .eq('owner_id', supabaseUser.id)
+          .maybeSingle();
+
+        if (serviceCenter) {
+          userData.serviceCenter = serviceCenter;
+          userData.name = serviceCenter.name;
+        }
+      }
+
+      // If vehicle owner, fetch vehicle data
+      if (profile.role === 'vehicle_owner') {
+        const { data: vehicle } = await supabase
+          .from('vehicles')
+          .select('id, make, model, registration_number')
+          .eq('user_id', supabaseUser.id)
+          .maybeSingle();
+
+        if (vehicle) {
+          userData.vehicle = vehicle;
+        }
+      }
+
+      return userData;
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      return null;
+    }
   }, []);
 
-  const logout = useCallback(() => {
+  const refreshProfile = useCallback(async () => {
+    if (session?.user) {
+      const userData = await fetchUserData(session.user);
+      setUser(userData);
+    }
+  }, [session, fetchUserData]);
+
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, newSession) => {
+        setSession(newSession);
+        
+        if (newSession?.user) {
+          // Defer Supabase calls with setTimeout to avoid deadlock
+          setTimeout(async () => {
+            const userData = await fetchUserData(newSession.user);
+            setUser(userData);
+            setIsLoading(false);
+          }, 0);
+        } else {
+          setUser(null);
+          setIsLoading(false);
+        }
+      }
+    );
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      if (existingSession?.user) {
+        fetchUserData(existingSession.user).then((userData) => {
+          setUser(userData);
+          setIsLoading(false);
+        });
+      } else {
+        setIsLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [fetchUserData]);
+
+  const signUp = useCallback(async (
+    email: string, 
+    password: string, 
+    metadata: Record<string, unknown>
+  ): Promise<{ error: Error | null }> => {
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: metadata,
+      },
+    });
+
+    return { error: error as Error | null };
+  }, []);
+
+  const signIn = useCallback(async (
+    email: string, 
+    password: string
+  ): Promise<{ error: Error | null }> => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    return { error: error as Error | null };
+  }, []);
+
+  const logout = useCallback(async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('autocare_user');
+    setSession(null);
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, login, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session,
+      isAuthenticated: !!user, 
+      isLoading,
+      signUp,
+      signIn,
+      logout,
+      refreshProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   );

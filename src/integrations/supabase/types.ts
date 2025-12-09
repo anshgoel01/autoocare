@@ -14,7 +14,259 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string | null
+          date: string
+          id: string
+          notes: string | null
+          service: string
+          service_center_id: string
+          status: string | null
+          time: string
+          updated_at: string | null
+          user_id: string
+          vehicle_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          date: string
+          id?: string
+          notes?: string | null
+          service: string
+          service_center_id: string
+          status?: string | null
+          time: string
+          updated_at?: string | null
+          user_id: string
+          vehicle_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          date?: string
+          id?: string
+          notes?: string | null
+          service?: string
+          service_center_id?: string
+          status?: string | null
+          time?: string
+          updated_at?: string | null
+          user_id?: string
+          vehicle_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_service_center_id_fkey"
+            columns: ["service_center_id"]
+            isOneToOne: false
+            referencedRelation: "service_centers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_vehicle_id_fkey"
+            columns: ["vehicle_id"]
+            isOneToOne: false
+            referencedRelation: "vehicles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          id: string
+          min_stock: number | null
+          name: string
+          price: number | null
+          quantity: number | null
+          service_center_id: string
+          sku: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          min_stock?: number | null
+          name: string
+          price?: number | null
+          quantity?: number | null
+          service_center_id: string
+          sku?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          id?: string
+          min_stock?: number | null
+          name?: string
+          price?: number | null
+          quantity?: number | null
+          service_center_id?: string
+          sku?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_service_center_id_fkey"
+            columns: ["service_center_id"]
+            isOneToOne: false
+            referencedRelation: "service_centers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      service_centers: {
+        Row: {
+          address: string
+          availability: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          lat: number | null
+          license_number: string | null
+          lng: number | null
+          name: string
+          open_hours: string | null
+          owner_id: string
+          phone: string | null
+          rating: number | null
+          reviews_count: number | null
+          services: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          availability?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          lat?: number | null
+          license_number?: string | null
+          lng?: number | null
+          name: string
+          open_hours?: string | null
+          owner_id: string
+          phone?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          services?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          availability?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          lat?: number | null
+          license_number?: string | null
+          lng?: number | null
+          name?: string
+          open_hours?: string | null
+          owner_id?: string
+          phone?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          services?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_centers_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehicles: {
+        Row: {
+          created_at: string | null
+          id: string
+          make: string
+          model: string
+          odometer: number | null
+          registration_number: string
+          updated_at: string | null
+          user_id: string
+          vin: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          make: string
+          model: string
+          odometer?: number | null
+          registration_number: string
+          updated_at?: string | null
+          user_id: string
+          vin?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          make?: string
+          model?: string
+          odometer?: number | null
+          registration_number?: string
+          updated_at?: string | null
+          user_id?: string
+          vin?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehicles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +275,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      user_role: "vehicle_owner" | "service_center"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +402,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["vehicle_owner", "service_center"],
+    },
   },
 } as const

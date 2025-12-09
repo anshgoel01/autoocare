@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth, UserRole } from '@/contexts/AuthContext';
-import { useServiceCenters } from '@/contexts/ServiceCentersContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -17,9 +17,11 @@ const SERVICE_OPTIONS = [
   { id: 'warranty', label: 'Warranty Services' },
 ];
 
+type SignUpRole = 'vehicle_owner' | 'service_center';
+
 export default function SignUp() {
   const [step, setStep] = useState<'role' | 'form'>('role');
-  const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
+  const [selectedRole, setSelectedRole] = useState<SignUpRole | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -61,10 +63,16 @@ export default function SignUp() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   
-  const { login } = useAuth();
-  const { addServiceCenter } = useServiceCenters();
+  const { signUp, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      navigate(user.role === 'vehicle_owner' ? '/dashboard' : '/service-center-dashboard');
+    }
+  }, [isAuthenticated, user, navigate]);
 
   const validateEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -126,18 +134,37 @@ export default function SignUp() {
     setIsLoading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const address = `${userForm.city}, ${userForm.state} ${userForm.pin}`;
+      
+      const { error } = await signUp(userForm.email, userForm.password, {
+        role: 'vehicle_owner',
+        full_name: userForm.fullName,
+        phone: `${userForm.countryCode} ${userForm.phone}`,
+        address,
+        vehicle_make: userForm.vehicleMake,
+        vehicle_model: userForm.vehicleModel,
+        vehicle_registration: userForm.vehicleRegistration,
+      });
 
-      // Store user data
-      const userData = {
-        ...userForm,
-        id: Math.random().toString(36).substr(2, 9),
-        role: 'user',
-        createdAt: new Date().toISOString(),
-      };
-      localStorage.setItem('autocare_registered_user', JSON.stringify(userData));
+      if (error) {
+        toast({
+          title: 'Sign Up Failed',
+          description: error.message || 'Something went wrong. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
 
-      await login(userForm.email, userForm.password, 'user');
+      // After signup, create the vehicle record
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      if (newUser) {
+        await supabase.from('vehicles').insert({
+          user_id: newUser.id,
+          make: userForm.vehicleMake,
+          model: userForm.vehicleModel,
+          registration_number: userForm.vehicleRegistration,
+        });
+      }
       
       toast({
         title: 'Account Created!',
@@ -145,10 +172,10 @@ export default function SignUp() {
       });
       
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Sign Up Failed',
-        description: 'Something went wrong. Please try again.',
+        description: error?.message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -163,9 +190,6 @@ export default function SignUp() {
     setIsLoading(true);
     
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Add service center to the list
       const servicesMap: Record<string, string> = {
         'regular': 'General Maintenance',
         'repairs': 'Repair Services',
@@ -173,18 +197,42 @@ export default function SignUp() {
         'warranty': 'Warranty Services',
       };
 
-      addServiceCenter({
-        name: serviceCenterForm.centerName,
-        ownerName: serviceCenterForm.ownerName,
-        email: serviceCenterForm.email,
-        address: `${serviceCenterForm.street}, ${serviceCenterForm.city}, ${serviceCenterForm.state} ${serviceCenterForm.pin}`,
+      const address = `${serviceCenterForm.street}, ${serviceCenterForm.city}, ${serviceCenterForm.state} ${serviceCenterForm.pin}`;
+      
+      const { error } = await signUp(serviceCenterForm.email, serviceCenterForm.password, {
+        role: 'service_center',
+        full_name: serviceCenterForm.ownerName,
         phone: `${serviceCenterForm.countryCode} ${serviceCenterForm.phone}`,
+        address,
+        center_name: serviceCenterForm.centerName,
+        license_number: serviceCenterForm.licenseNumber,
         services: serviceCenterForm.servicesOffered.map(s => servicesMap[s] || s),
-        openHours: `${serviceCenterForm.openingHour} - ${serviceCenterForm.closingHour}`,
-        licenseNumber: serviceCenterForm.licenseNumber,
+        open_hours: `${serviceCenterForm.openingHour} - ${serviceCenterForm.closingHour}`,
       });
 
-      await login(serviceCenterForm.email, serviceCenterForm.password, 'service-center');
+      if (error) {
+        toast({
+          title: 'Registration Failed',
+          description: error.message || 'Something went wrong. Please try again.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // After signup, create the service center record
+      const { data: { user: newUser } } = await supabase.auth.getUser();
+      if (newUser) {
+        await supabase.from('service_centers').insert({
+          owner_id: newUser.id,
+          name: serviceCenterForm.centerName,
+          address,
+          phone: `${serviceCenterForm.countryCode} ${serviceCenterForm.phone}`,
+          email: serviceCenterForm.email,
+          license_number: serviceCenterForm.licenseNumber,
+          services: serviceCenterForm.servicesOffered.map(s => servicesMap[s] || s),
+          open_hours: `${serviceCenterForm.openingHour} - ${serviceCenterForm.closingHour}`,
+        });
+      }
       
       toast({
         title: 'Service Center Registered!',
@@ -192,10 +240,10 @@ export default function SignUp() {
       });
       
       navigate('/service-center-dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Registration Failed',
-        description: 'Something went wrong. Please try again.',
+        description: error?.message || 'Something went wrong. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -238,7 +286,7 @@ export default function SignUp() {
           
           <CardContent className="pt-4 space-y-4">
             <button
-              onClick={() => { setSelectedRole('user'); setStep('form'); }}
+              onClick={() => { setSelectedRole('vehicle_owner'); setStep('form'); }}
               className="w-full p-6 rounded-xl border-2 border-border hover:border-primary/50 hover:bg-primary/5 transition-all group text-left"
             >
               <div className="flex items-start gap-4">
@@ -255,7 +303,7 @@ export default function SignUp() {
             </button>
 
             <button
-              onClick={() => { setSelectedRole('service-center'); setStep('form'); }}
+              onClick={() => { setSelectedRole('service_center'); setStep('form'); }}
               className="w-full p-6 rounded-xl border-2 border-border hover:border-accent/50 hover:bg-accent/5 transition-all group text-left"
             >
               <div className="flex items-start gap-4">
@@ -303,9 +351,9 @@ export default function SignUp() {
             </button>
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                selectedRole === 'user' ? 'bg-primary/10' : 'bg-accent/10'
+                selectedRole === 'vehicle_owner' ? 'bg-primary/10' : 'bg-accent/10'
               }`}>
-                {selectedRole === 'user' ? (
+                {selectedRole === 'vehicle_owner' ? (
                   <User className="w-5 h-5 text-primary" />
                 ) : (
                   <Building2 className="w-5 h-5 text-accent" />
@@ -313,10 +361,10 @@ export default function SignUp() {
               </div>
               <div>
                 <CardTitle className="text-xl">
-                  {selectedRole === 'user' ? 'Vehicle Owner Sign Up' : 'Service Center Registration'}
+                  {selectedRole === 'vehicle_owner' ? 'Vehicle Owner Sign Up' : 'Service Center Registration'}
                 </CardTitle>
                 <CardDescription>
-                  {selectedRole === 'user' 
+                  {selectedRole === 'vehicle_owner' 
                     ? 'Create your account to track vehicle health'
                     : 'Register your service center to connect with customers'
                   }
@@ -327,7 +375,7 @@ export default function SignUp() {
         </CardHeader>
         
         <CardContent className="pt-4">
-          {selectedRole === 'user' ? (
+          {selectedRole === 'vehicle_owner' ? (
             <form onSubmit={handleUserSignUp} className="space-y-6">
               {/* Personal Info */}
               <div className="space-y-4">
@@ -403,30 +451,32 @@ export default function SignUp() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      className="w-20"
-                      value={userForm.countryCode}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, countryCode: e.target.value }))}
-                    />
-                    <Input
-                      id="phone"
-                      placeholder="5551234567"
-                      value={userForm.phone}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
-                      className={`flex-1 ${errors.phone ? 'border-destructive' : ''}`}
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        className="w-20"
+                        value={userForm.countryCode}
+                        onChange={(e) => setUserForm(prev => ({ ...prev, countryCode: e.target.value }))}
+                      />
+                      <Input
+                        id="phone"
+                        placeholder="1234567890"
+                        value={userForm.phone}
+                        onChange={(e) => setUserForm(prev => ({ ...prev, phone: e.target.value }))}
+                        className={`flex-1 ${errors.phone ? 'border-destructive' : ''}`}
+                      />
+                    </div>
+                    {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
                   </div>
-                  {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
                 </div>
               </div>
 
-              {/* Address */}
+              {/* Address Info */}
               <div className="space-y-4">
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Address</h3>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">City *</Label>
                     <Input
@@ -449,7 +499,7 @@ export default function SignUp() {
                     />
                     {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}
                   </div>
-                  <div className="space-y-2 col-span-2 md:col-span-1">
+                  <div className="space-y-2">
                     <Label htmlFor="pin">PIN Code *</Label>
                     <Input
                       id="pin"
@@ -463,26 +513,15 @@ export default function SignUp() {
                 </div>
               </div>
 
-              {/* Vehicle Details */}
+              {/* Vehicle Info */}
               <div className="space-y-4">
-                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Vehicle Details</h3>
+                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Vehicle Information</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="vehicleRegistration">Registration Number *</Label>
-                    <Input
-                      id="vehicleRegistration"
-                      placeholder="CA-7XYZ-921"
-                      value={userForm.vehicleRegistration}
-                      onChange={(e) => setUserForm(prev => ({ ...prev, vehicleRegistration: e.target.value }))}
-                      className={errors.vehicleRegistration ? 'border-destructive' : ''}
-                    />
-                    {errors.vehicleRegistration && <p className="text-xs text-destructive">{errors.vehicleRegistration}</p>}
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="vehicleMake">Vehicle Make *</Label>
+                    <Label htmlFor="vehicleMake">Make *</Label>
                     <Input
                       id="vehicleMake"
-                      placeholder="Tesla"
+                      placeholder="Honda"
                       value={userForm.vehicleMake}
                       onChange={(e) => setUserForm(prev => ({ ...prev, vehicleMake: e.target.value }))}
                       className={errors.vehicleMake ? 'border-destructive' : ''}
@@ -490,23 +529,34 @@ export default function SignUp() {
                     {errors.vehicleMake && <p className="text-xs text-destructive">{errors.vehicleMake}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="vehicleModel">Vehicle Model *</Label>
+                    <Label htmlFor="vehicleModel">Model *</Label>
                     <Input
                       id="vehicleModel"
-                      placeholder="Model 3"
+                      placeholder="City"
                       value={userForm.vehicleModel}
                       onChange={(e) => setUserForm(prev => ({ ...prev, vehicleModel: e.target.value }))}
                       className={errors.vehicleModel ? 'border-destructive' : ''}
                     />
                     {errors.vehicleModel && <p className="text-xs text-destructive">{errors.vehicleModel}</p>}
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="vehicleRegistration">Registration *</Label>
+                    <Input
+                      id="vehicleRegistration"
+                      placeholder="HR-01-AB-1234"
+                      value={userForm.vehicleRegistration}
+                      onChange={(e) => setUserForm(prev => ({ ...prev, vehicleRegistration: e.target.value }))}
+                      className={errors.vehicleRegistration ? 'border-destructive' : ''}
+                    />
+                    {errors.vehicleRegistration && <p className="text-xs text-destructive">{errors.vehicleRegistration}</p>}
+                  </div>
                 </div>
               </div>
 
-              <Button type="submit" className="w-full h-12" disabled={isLoading}>
+              <Button type="submit" className="w-full h-11" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
                     Creating Account...
                   </>
                 ) : (
@@ -516,7 +566,7 @@ export default function SignUp() {
             </form>
           ) : (
             <form onSubmit={handleServiceCenterSignUp} className="space-y-6">
-              {/* Service Center Info */}
+              {/* Center Info */}
               <div className="space-y-4">
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Service Center Details</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -524,7 +574,7 @@ export default function SignUp() {
                     <Label htmlFor="centerName">Service Center Name *</Label>
                     <Input
                       id="centerName"
-                      placeholder="AutoCare Premium"
+                      placeholder="AutoCare Mumbai"
                       value={serviceCenterForm.centerName}
                       onChange={(e) => setServiceCenterForm(prev => ({ ...prev, centerName: e.target.value }))}
                       className={errors.centerName ? 'border-destructive' : ''}
@@ -535,7 +585,7 @@ export default function SignUp() {
                     <Label htmlFor="ownerName">Owner Name *</Label>
                     <Input
                       id="ownerName"
-                      placeholder="John Doe"
+                      placeholder="Rajesh Kumar"
                       value={serviceCenterForm.ownerName}
                       onChange={(e) => setServiceCenterForm(prev => ({ ...prev, ownerName: e.target.value }))}
                       className={errors.ownerName ? 'border-destructive' : ''}
@@ -558,22 +608,15 @@ export default function SignUp() {
                     {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="scPhone">Phone Number *</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        className="w-20"
-                        value={serviceCenterForm.countryCode}
-                        onChange={(e) => setServiceCenterForm(prev => ({ ...prev, countryCode: e.target.value }))}
-                      />
-                      <Input
-                        id="scPhone"
-                        placeholder="5551234567"
-                        value={serviceCenterForm.phone}
-                        onChange={(e) => setServiceCenterForm(prev => ({ ...prev, phone: e.target.value }))}
-                        className={`flex-1 ${errors.phone ? 'border-destructive' : ''}`}
-                      />
-                    </div>
-                    {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                    <Label htmlFor="licenseNumber">License Number *</Label>
+                    <Input
+                      id="licenseNumber"
+                      placeholder="MH-AUTO-12345"
+                      value={serviceCenterForm.licenseNumber}
+                      onChange={(e) => setServiceCenterForm(prev => ({ ...prev, licenseNumber: e.target.value }))}
+                      className={errors.licenseNumber ? 'border-destructive' : ''}
+                    />
+                    {errors.licenseNumber && <p className="text-xs text-destructive">{errors.licenseNumber}</p>}
                   </div>
                 </div>
 
@@ -621,28 +664,47 @@ export default function SignUp() {
                     {errors.confirmPassword && <p className="text-xs text-destructive">{errors.confirmPassword}</p>}
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="scPhone">Phone Number *</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      className="w-20"
+                      value={serviceCenterForm.countryCode}
+                      onChange={(e) => setServiceCenterForm(prev => ({ ...prev, countryCode: e.target.value }))}
+                    />
+                    <Input
+                      id="scPhone"
+                      placeholder="1234567890"
+                      value={serviceCenterForm.phone}
+                      onChange={(e) => setServiceCenterForm(prev => ({ ...prev, phone: e.target.value }))}
+                      className={`flex-1 ${errors.phone ? 'border-destructive' : ''}`}
+                    />
+                  </div>
+                  {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+                </div>
               </div>
 
               {/* Address */}
               <div className="space-y-4">
-                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Location</h3>
+                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Address</h3>
                 <div className="space-y-2">
                   <Label htmlFor="street">Street Address *</Label>
                   <Input
                     id="street"
-                    placeholder="456 Market Street"
+                    placeholder="123 Main Road"
                     value={serviceCenterForm.street}
                     onChange={(e) => setServiceCenterForm(prev => ({ ...prev, street: e.target.value }))}
                     className={errors.street ? 'border-destructive' : ''}
                   />
                   {errors.street && <p className="text-xs text-destructive">{errors.street}</p>}
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="scCity">City *</Label>
                     <Input
                       id="scCity"
-                      placeholder="San Francisco"
+                      placeholder="Mumbai"
                       value={serviceCenterForm.city}
                       onChange={(e) => setServiceCenterForm(prev => ({ ...prev, city: e.target.value }))}
                       className={errors.city ? 'border-destructive' : ''}
@@ -653,18 +715,18 @@ export default function SignUp() {
                     <Label htmlFor="scState">State *</Label>
                     <Input
                       id="scState"
-                      placeholder="California"
+                      placeholder="Maharashtra"
                       value={serviceCenterForm.state}
                       onChange={(e) => setServiceCenterForm(prev => ({ ...prev, state: e.target.value }))}
                       className={errors.state ? 'border-destructive' : ''}
                     />
                     {errors.state && <p className="text-xs text-destructive">{errors.state}</p>}
                   </div>
-                  <div className="space-y-2 col-span-2 md:col-span-1">
+                  <div className="space-y-2">
                     <Label htmlFor="scPin">PIN Code *</Label>
                     <Input
                       id="scPin"
-                      placeholder="94102"
+                      placeholder="400001"
                       value={serviceCenterForm.pin}
                       onChange={(e) => setServiceCenterForm(prev => ({ ...prev, pin: e.target.value }))}
                       className={errors.pin ? 'border-destructive' : ''}
@@ -699,7 +761,7 @@ export default function SignUp() {
                 </div>
               </div>
 
-              {/* Services Offered */}
+              {/* Services */}
               <div className="space-y-4">
                 <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Services Offered *</h3>
                 <div className="grid grid-cols-2 gap-3">
@@ -710,42 +772,23 @@ export default function SignUp() {
                         checked={serviceCenterForm.servicesOffered.includes(service.id)}
                         onCheckedChange={() => handleServiceToggle(service.id)}
                       />
-                      <label
-                        htmlFor={service.id}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                      >
+                      <Label htmlFor={service.id} className="text-sm font-normal cursor-pointer">
                         {service.label}
-                      </label>
+                      </Label>
                     </div>
                   ))}
                 </div>
                 {errors.servicesOffered && <p className="text-xs text-destructive">{errors.servicesOffered}</p>}
               </div>
 
-              {/* License */}
-              <div className="space-y-4">
-                <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">Registration</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="licenseNumber">Registration/License Number *</Label>
-                  <Input
-                    id="licenseNumber"
-                    placeholder="SC-2024-12345"
-                    value={serviceCenterForm.licenseNumber}
-                    onChange={(e) => setServiceCenterForm(prev => ({ ...prev, licenseNumber: e.target.value }))}
-                    className={errors.licenseNumber ? 'border-destructive' : ''}
-                  />
-                  {errors.licenseNumber && <p className="text-xs text-destructive">{errors.licenseNumber}</p>}
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full h-12" disabled={isLoading}>
+              <Button type="submit" className="w-full h-11" disabled={isLoading}>
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Registering...
+                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    Registering Service Center...
                   </>
                 ) : (
-                  'Create Account'
+                  'Register Service Center'
                 )}
               </Button>
             </form>
