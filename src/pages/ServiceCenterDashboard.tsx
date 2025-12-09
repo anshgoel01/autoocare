@@ -1,33 +1,56 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { useMyServiceCenter } from '@/hooks/useServiceCenters';
+import { useServiceCenterBookings } from '@/hooks/useBookings';
+import { useInventory, getInventoryStatus } from '@/hooks/useInventory';
 import ServiceCenterLayout from '@/components/layouts/ServiceCenterLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  serviceBookings, 
-  inventoryItems, 
-  technicians,
-  getInventoryStatus,
-  getBookingStatusColor 
-} from '@/data/mockData';
 import { 
   CalendarDays, 
   Package, 
   Users, 
   AlertTriangle,
   Clock,
-  DollarSign,
-  TrendingUp,
   CheckCircle,
+  Loader2,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
+function getBookingStatusColor(status: string): string {
+  switch (status) {
+    case 'confirmed': return 'bg-success/10 text-success border-success/20';
+    case 'pending': return 'bg-warning/10 text-warning border-warning/20';
+    case 'in-progress': return 'bg-primary/10 text-primary border-primary/20';
+    case 'completed': return 'bg-muted text-muted-foreground border-muted';
+    default: return 'bg-muted text-muted-foreground border-muted';
+  }
+}
+
 export default function ServiceCenterDashboard() {
   const navigate = useNavigate();
-  const todayBookings = serviceBookings.filter(b => b.date === '2024-12-07');
-  const pendingBookings = serviceBookings.filter(b => b.status === 'pending');
-  const lowStockItems = inventoryItems.filter(i => getInventoryStatus(i.stock, i.minStock) !== 'in-stock');
-  const completedToday = serviceBookings.filter(b => b.date === '2024-12-07' && b.status === 'completed');
+  const { user } = useAuth();
+  const { serviceCenter, isLoading: scLoading } = useMyServiceCenter(user?.id);
+  const { bookings, isLoading: bookingsLoading } = useServiceCenterBookings(serviceCenter?.id);
+  const { inventory, lowStockItems, isLoading: invLoading } = useInventory(serviceCenter?.id);
+
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const todayBookings = bookings.filter(b => b.date === today);
+  const pendingBookings = bookings.filter(b => b.status === 'pending');
+  const completedToday = bookings.filter(b => b.date === today && b.status === 'completed');
+
+  const isLoading = scLoading || bookingsLoading || invLoading;
+
+  if (isLoading) {
+    return (
+      <ServiceCenterLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ServiceCenterLayout>
+    );
+  }
 
   return (
     <ServiceCenterLayout>
@@ -37,7 +60,7 @@ export default function ServiceCenterDashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold mb-1">
-                Service Center Dashboard
+                {serviceCenter?.name || 'Service Center'} Dashboard
               </h1>
               <p className="text-accent-foreground/80">
                 {format(new Date(), 'EEEE, MMMM d, yyyy')}
@@ -119,33 +142,34 @@ export default function ServiceCenterDashboard() {
               <Button variant="outline" size="sm" onClick={() => navigate('/service-center-dashboard/bookings')}>View All</Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {todayBookings.slice(0, 4).map((booking) => (
-                  <div 
-                    key={booking.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-primary" />
+              {todayBookings.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No appointments today</p>
+              ) : (
+                <div className="space-y-3">
+                  {todayBookings.slice(0, 4).map((booking) => (
+                    <div 
+                      key={booking.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{booking.profile?.full_name || 'Customer'}</p>
+                          <p className="text-sm text-muted-foreground">{booking.service}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{booking.customer}</p>
-                        <p className="text-sm text-muted-foreground">{booking.service}</p>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">{booking.time}</p>
+                        <Badge variant="outline" className={getBookingStatusColor(booking.status)}>
+                          {booking.status}
+                        </Badge>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{booking.time}</p>
-                      <Badge 
-                        variant="outline" 
-                        className={getBookingStatusColor(booking.status)}
-                      >
-                        {booking.status}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -159,75 +183,40 @@ export default function ServiceCenterDashboard() {
               <Button variant="outline" size="sm" onClick={() => navigate('/service-center-dashboard/inventory')}>Manage Inventory</Button>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {lowStockItems.map((item) => {
-                  const status = getInventoryStatus(item.stock, item.minStock);
-                  return (
-                    <div 
-                      key={item.id}
-                      className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
-                    >
-                      <div>
-                        <p className="font-medium">{item.name}</p>
-                        <p className="text-sm text-muted-foreground">SKU: {item.sku}</p>
+              {lowStockItems.length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">All items are well stocked</p>
+              ) : (
+                <div className="space-y-3">
+                  {lowStockItems.map((item) => {
+                    const status = getInventoryStatus(item.quantity, item.min_stock);
+                    return (
+                      <div 
+                        key={item.id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-secondary/50"
+                      >
+                        <div>
+                          <p className="font-medium">{item.name}</p>
+                          <p className="text-sm text-muted-foreground">SKU: {item.sku || 'N/A'}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm">
+                            <span className={status === 'out-of-stock' ? 'text-critical font-semibold' : 'text-warning font-semibold'}>
+                              {item.quantity}
+                            </span>
+                            <span className="text-muted-foreground"> / {item.min_stock} min</span>
+                          </p>
+                          <Badge className={status === 'out-of-stock' ? 'bg-critical/10 text-critical' : 'bg-warning/10 text-warning'}>
+                            {status === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm">
-                          <span className={status === 'out-of-stock' ? 'text-critical font-semibold' : 'text-warning font-semibold'}>
-                            {item.stock}
-                          </span>
-                          <span className="text-muted-foreground"> / {item.minStock} min</span>
-                        </p>
-                        <Badge 
-                          className={status === 'out-of-stock' 
-                            ? 'inventory-status-out-of-stock' 
-                            : 'inventory-status-low-stock'
-                          }
-                        >
-                          {status === 'out-of-stock' ? 'Out of Stock' : 'Low Stock'}
-                        </Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* Technicians */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Technician Status</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {technicians.map((tech) => (
-                <div 
-                  key={tech.id}
-                  className="p-4 rounded-xl bg-secondary/50 flex items-center gap-3"
-                >
-                  <div className="relative">
-                    <img 
-                      src={tech.avatar} 
-                      alt={tech.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <span 
-                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-background ${
-                        tech.available ? 'bg-success' : 'bg-muted-foreground'
-                      }`}
-                    />
-                  </div>
-                  <div>
-                    <p className="font-medium">{tech.name}</p>
-                    <p className="text-xs text-muted-foreground">{tech.role}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </ServiceCenterLayout>
   );
