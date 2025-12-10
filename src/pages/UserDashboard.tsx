@@ -14,8 +14,8 @@ import {
   serviceHistory,
   userProfile,
 } from '@/data/mockData';
-import { useServiceCenters } from '@/contexts/ServiceCentersContext';
-import { useUserBookings } from '@/contexts/UserBookingsContext';
+import { useServiceCenters } from '@/hooks/useServiceCenters';
+import { useUserBookings } from '@/hooks/useBookings';
 import { 
   Thermometer, 
   Battery, 
@@ -33,7 +33,7 @@ import DashboardLayout from '@/components/layouts/DashboardLayout';
 export default function UserDashboard() {
   const navigate = useNavigate();
   const { serviceCenters } = useServiceCenters();
-  const { hasActiveBooking, nextBooking } = useUserBookings();
+  const { bookings, hasActiveBooking, nextBooking } = useUserBookings();
   
   const daysUntilService = differenceInDays(
     new Date(vehicleHealth.nextServiceDate), 

@@ -8,7 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { userProfile } from '@/data/mockData';
-import { useServiceCenters } from '@/contexts/ServiceCentersContext';
+import { useServiceCenters } from '@/hooks/useServiceCenters';
 import { useToast } from '@/hooks/use-toast';
 import { Camera, Edit2, Save, X, Car, User, MapPin, Mail, Phone, Wrench } from 'lucide-react';
 
@@ -237,7 +237,6 @@ export default function ProfilePage() {
                     <SelectItem key={center.id} value={center.id}>
                       <div className="flex items-center gap-2">
                         <span>{center.name}</span>
-                        <span className="text-xs text-muted-foreground">({center.distance} mi)</span>
                       </div>
                     </SelectItem>
                   ))}

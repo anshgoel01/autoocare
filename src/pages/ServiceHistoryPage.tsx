@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { serviceHistory } from '@/data/mockData';
-import { useUserBookings } from '@/contexts/UserBookingsContext';
+import { useUserBookings } from '@/hooks/useBookings';
 import { format } from 'date-fns';
 import { Download, FileText, Calendar, DollarSign, User, Clock, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -124,7 +124,7 @@ export default function ServiceHistoryPage() {
                       </div>
                       <div>
                         <h3 className="font-semibold">{booking.service}</h3>
-                        <p className="text-sm text-muted-foreground">{booking.centerName}</p>
+                        <p className="text-sm text-muted-foreground">{booking.service_center?.name}</p>
                         <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="w-3.5 h-3.5" />
