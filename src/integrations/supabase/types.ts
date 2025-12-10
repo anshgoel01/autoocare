@@ -304,6 +304,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      set_service_center_role: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "vehicle_owner" | "service_center"

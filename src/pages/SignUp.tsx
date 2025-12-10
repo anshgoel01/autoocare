@@ -136,8 +136,8 @@ export default function SignUp() {
     try {
       const address = `${userForm.city}, ${userForm.state} ${userForm.pin}`;
       
+      // Sign up WITHOUT passing role in metadata - role defaults to vehicle_owner server-side
       const { error } = await signUp(userForm.email, userForm.password, {
-        role: 'vehicle_owner',
         full_name: userForm.fullName,
         phone: `${userForm.countryCode} ${userForm.phone}`,
         address,
@@ -199,8 +199,8 @@ export default function SignUp() {
 
       const address = `${serviceCenterForm.street}, ${serviceCenterForm.city}, ${serviceCenterForm.state} ${serviceCenterForm.pin}`;
       
+      // Sign up WITHOUT passing role in metadata - role is set server-side
       const { error } = await signUp(serviceCenterForm.email, serviceCenterForm.password, {
-        role: 'service_center',
         full_name: serviceCenterForm.ownerName,
         phone: `${serviceCenterForm.countryCode} ${serviceCenterForm.phone}`,
         address,
@@ -219,9 +219,18 @@ export default function SignUp() {
         return;
       }
 
-      // After signup, create the service center record
+      // After signup, upgrade role via secure RPC and create the service center record
       const { data: { user: newUser } } = await supabase.auth.getUser();
       if (newUser) {
+        // Call secure RPC to set service_center role (validates auth server-side)
+        const { error: roleError } = await supabase.rpc('set_service_center_role', {
+          _user_id: newUser.id
+        });
+
+        if (roleError) {
+          console.error('Failed to set service center role:', roleError);
+        }
+
         await supabase.from('service_centers').insert({
           owner_id: newUser.id,
           name: serviceCenterForm.centerName,
