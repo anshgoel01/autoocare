@@ -11,11 +11,11 @@ import {
   vehicleHealth, 
   telemetryData, 
   mlPredictions, 
-  serviceHistory,
-  userProfile,
 } from '@/data/mockData';
+import { useAuth } from '@/contexts/AuthContext';
 import { useServiceCenters } from '@/hooks/useServiceCenters';
 import { useUserBookings } from '@/hooks/useBookings';
+import { useMyVehicle } from '@/hooks/useVehicles';
 import { 
   Thermometer, 
   Battery, 
@@ -26,14 +26,20 @@ import {
   Droplets,
   Wind,
   Eye,
+  Car,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
 
 export default function UserDashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { serviceCenters } = useServiceCenters();
   const { bookings, hasActiveBooking, nextBooking } = useUserBookings();
+  const { vehicle: primaryVehicle } = useMyVehicle();
+  
+  const userName = user?.name || user?.profile?.full_name || 'User';
+  const firstName = userName.split(' ')[0];
   
   const daysUntilService = differenceInDays(
     new Date(vehicleHealth.nextServiceDate), 
@@ -48,11 +54,18 @@ export default function UserDashboard() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold mb-1">
-                Welcome back, {userProfile.name.split(' ')[0]}!
+                Welcome back, {firstName}!
               </h1>
-              <p className="text-primary-foreground/80">
-                Your {userProfile.vehicle.year} {userProfile.vehicle.make} {userProfile.vehicle.model}
-              </p>
+              {primaryVehicle ? (
+                <p className="text-primary-foreground/80">
+                  Your {primaryVehicle.make} {primaryVehicle.model} • {primaryVehicle.registration_number}
+                </p>
+              ) : (
+                <p className="text-primary-foreground/80 flex items-center gap-2">
+                  <Car className="w-4 h-4" />
+                  No vehicle registered yet
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-3">
               {hasActiveBooking && nextBooking ? (
@@ -219,39 +232,51 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Service History */}
+        {/* Service History - Using Real Bookings */}
         <Card>
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Service History</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/history')}>
+              View All
+            </Button>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border text-left">
-                    <th className="pb-3 font-medium text-muted-foreground">Date</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Service</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Center</th>
-                    <th className="pb-3 font-medium text-muted-foreground">Technician</th>
-                    <th className="pb-3 font-medium text-muted-foreground text-right">Cost</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {serviceHistory.map((service) => (
-                    <tr key={service.id} className="border-b border-border/50 table-row-hover">
-                      <td className="py-3 text-sm">
-                        {format(new Date(service.date), 'MMM d, yyyy')}
-                      </td>
-                      <td className="py-3 text-sm font-medium">{service.service}</td>
-                      <td className="py-3 text-sm text-muted-foreground">{service.center}</td>
-                      <td className="py-3 text-sm text-muted-foreground">{service.technician}</td>
-                      <td className="py-3 text-sm text-right font-medium">
-                        {service.cost === 0 ? 'Free' : `$${service.cost.toFixed(2)}`}
-                      </td>
+              {bookings.filter(b => b.status === 'completed').length === 0 ? (
+                <p className="text-muted-foreground text-center py-8">No completed services yet</p>
+              ) : (
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border text-left">
+                      <th className="pb-3 font-medium text-muted-foreground">Date</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Service</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Center</th>
+                      <th className="pb-3 font-medium text-muted-foreground">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {bookings
+                      .filter(b => b.status === 'completed')
+                      .slice(0, 5)
+                      .map((booking) => (
+                        <tr key={booking.id} className="border-b border-border/50 table-row-hover">
+                          <td className="py-3 text-sm">
+                            {format(new Date(booking.date), 'MMM d, yyyy')}
+                          </td>
+                          <td className="py-3 text-sm font-medium">{booking.service}</td>
+                          <td className="py-3 text-sm text-muted-foreground">
+                            {booking.service_center?.name || 'Service Center'}
+                          </td>
+                          <td className="py-3 text-sm">
+                            <Badge variant="outline" className="bg-success/10 text-success border-success/20">
+                              Completed
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              )}
             </div>
           </CardContent>
         </Card>

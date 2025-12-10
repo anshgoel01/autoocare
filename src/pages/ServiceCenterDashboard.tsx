@@ -77,7 +77,10 @@ export default function ServiceCenterDashboard() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] hover:border-primary/50"
+            onClick={() => navigate('/service-center-dashboard/bookings', { state: { filter: 'today' } })}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -91,7 +94,10 @@ export default function ServiceCenterDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] hover:border-warning/50"
+            onClick={() => navigate('/service-center-dashboard/bookings', { state: { filter: 'pending' } })}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -105,7 +111,10 @@ export default function ServiceCenterDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] hover:border-critical/50"
+            onClick={() => navigate('/service-center-dashboard/inventory', { state: { filter: 'low-stock' } })}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -119,7 +128,10 @@ export default function ServiceCenterDashboard() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer transition-all hover:shadow-lg hover:scale-[1.02] hover:border-success/50"
+            onClick={() => navigate('/service-center-dashboard/bookings', { state: { filter: 'completed' } })}
+          >
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
                 <div>
