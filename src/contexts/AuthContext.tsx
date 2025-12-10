@@ -67,16 +67,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return null;
       }
 
+      // Fetch role from user_roles table (secure source of truth)
+      const { data: userRoleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+
+      // Use role from user_roles table, fallback to profile for backward compatibility
+      const userRole = (userRoleData?.role || profile.role) as UserRole;
+
       const userData: User = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         name: profile.full_name || supabaseUser.email?.split('@')[0] || 'User',
-        role: profile.role as UserRole,
-        profile,
+        role: userRole,
+        profile: { ...profile, role: userRole },
       };
 
       // If service center, fetch service center data
-      if (profile.role === 'service_center') {
+      if (userRole === 'service_center') {
         const { data: serviceCenter } = await supabase
           .from('service_centers')
           .select('id, name')
@@ -90,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       // If vehicle owner, fetch vehicle data
-      if (profile.role === 'vehicle_owner') {
+      if (userRole === 'vehicle_owner') {
         const { data: vehicle } = await supabase
           .from('vehicles')
           .select('id, make, model, registration_number')
