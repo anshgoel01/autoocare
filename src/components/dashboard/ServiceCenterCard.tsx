@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useUserBookings } from '@/contexts/UserBookingsContext';
-import { Star, MapPin, Phone, Clock, Navigation, Eye } from 'lucide-react';
+import { useUserBookings } from '@/hooks/useBookings';
+import { Star, MapPin, Phone, Clock, Eye } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -17,13 +17,12 @@ interface ServiceCenterCardProps {
     id: string;
     name: string;
     address: string;
-    distance: number;
     rating: number;
-    reviews: number;
-    availability: 'high' | 'medium' | 'low';
-    phone: string;
+    reviews_count: number;
+    availability: string;
+    phone: string | null;
     services: string[];
-    openHours: string;
+    open_hours: string | null;
   };
 }
 
@@ -36,12 +35,12 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
     notes: '',
   });
   const { toast } = useToast();
-  const { addBooking, bookings } = useUserBookings();
+  const { bookings, addBooking } = useUserBookings();
   const navigate = useNavigate();
 
   // Check if there's an active booking for this center
   const hasActiveBookingAtCenter = bookings.some(
-    b => b.centerId === center.id && (b.status === 'confirmed' || b.status === 'pending')
+    b => b.service_center_id === center.id && (b.status === 'confirmed' || b.status === 'pending')
   );
 
   const getAvailabilityConfig = () => {
@@ -50,7 +49,7 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
         return { label: 'Available Now', color: 'bg-success text-success-foreground' };
       case 'medium':
         return { label: 'Limited Slots', color: 'bg-warning text-warning-foreground' };
-      case 'low':
+      default:
         return { label: 'Busy', color: 'bg-critical text-critical-foreground' };
     }
   };
@@ -68,8 +67,7 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
     }
 
     addBooking({
-      centerId: center.id,
-      centerName: center.name,
+      service_center_id: center.id,
       service: bookingData.service,
       date: bookingData.date,
       time: bookingData.time,
@@ -104,11 +102,7 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
           <div className="flex items-center gap-1">
             <Star className="w-4 h-4 fill-warning text-warning" />
             <span className="font-medium">{center.rating}</span>
-            <span className="text-muted-foreground">({center.reviews})</span>
-          </div>
-          <div className="flex items-center gap-1 text-muted-foreground">
-            <Navigation className="w-4 h-4" />
-            <span>{center.distance} mi</span>
+            <span className="text-muted-foreground">({center.reviews_count})</span>
           </div>
         </div>
 
@@ -131,12 +125,14 @@ export default function ServiceCenterCard({ center }: ServiceCenterCardProps) {
         <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
           <div className="flex items-center gap-1">
             <Clock className="w-3.5 h-3.5" />
-            <span>{center.openHours}</span>
+            <span>{center.open_hours || '9:00 AM - 6:00 PM'}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Phone className="w-3.5 h-3.5" />
-            <span>{center.phone}</span>
-          </div>
+          {center.phone && (
+            <div className="flex items-center gap-1">
+              <Phone className="w-3.5 h-3.5" />
+              <span>{center.phone}</span>
+            </div>
+          )}
         </div>
 
         {hasActiveBookingAtCenter ? (

@@ -4,7 +4,7 @@ import ServiceCenterCard from '@/components/dashboard/ServiceCenterCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useServiceCenters } from '@/contexts/ServiceCentersContext';
+import { useServiceCenters } from '@/hooks/useServiceCenters';
 import { Search, MapPin, Filter, List, Map } from 'lucide-react';
 
 export default function ServiceCentersPage() {
