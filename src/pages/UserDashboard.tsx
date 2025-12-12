@@ -4,18 +4,21 @@ import ComponentHealthBar from '@/components/dashboard/ComponentHealthBar';
 import TelemetryGauge from '@/components/dashboard/TelemetryGauge';
 import PredictionCard from '@/components/dashboard/PredictionCard';
 import ServiceCenterCard from '@/components/dashboard/ServiceCenterCard';
+import FailureRiskCard from '@/components/dashboard/FailureRiskCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   vehicleHealth, 
   telemetryData, 
-  mlPredictions, 
+  mlPredictions,
+  mlFeatures,
 } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useServiceCenters } from '@/hooks/useServiceCenters';
 import { useUserBookings } from '@/hooks/useBookings';
 import { useMyVehicle } from '@/hooks/useVehicles';
+import { usePrediction } from '@/hooks/usePrediction';
 import { 
   Thermometer, 
   Battery, 
@@ -37,6 +40,7 @@ export default function UserDashboard() {
   const { serviceCenters } = useServiceCenters();
   const { bookings, hasActiveBooking, nextBooking } = useUserBookings();
   const { vehicle: primaryVehicle } = useMyVehicle();
+  const { predict, isLoading: isPredicting, result: predictionResult } = usePrediction();
   
   const userName = user?.name || user?.profile?.full_name || 'User';
   const firstName = userName.split(' ')[0];
@@ -45,6 +49,12 @@ export default function UserDashboard() {
     new Date(vehicleHealth.nextServiceDate), 
     new Date()
   );
+
+  const handleCheckHealth = async () => {
+    // Map current telemetry to ML model input features
+    // In a real app, these would come from actual vehicle sensors
+    await predict(mlFeatures);
+  };
 
   return (
     <DashboardLayout>
@@ -105,7 +115,7 @@ export default function UserDashboard() {
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Health Score Card */}
-          <Card className="lg:row-span-2">
+          <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Vehicle Health
@@ -131,6 +141,13 @@ export default function UserDashboard() {
               </div>
             </CardContent>
           </Card>
+
+          {/* ML Failure Prediction Card */}
+          <FailureRiskCard
+            result={predictionResult}
+            isLoading={isPredicting}
+            onCheckHealth={handleCheckHealth}
+          />
 
           {/* Telemetry Gauges */}
           <div className="lg:col-span-2">
