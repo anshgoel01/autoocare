@@ -1,1 +1,4 @@
 project_id = "twfcicnbkuthuzthgbpd"
+
+[functions.predict-failure]
+verify_jwt = false

@@ -68,14 +68,33 @@ export const mlPredictions = [
   },
 ];
 
-// Telemetry Data
+// Telemetry Data - Extended with all 14 ML model features
 export const telemetryData = {
-  engineTemp: { value: 195, unit: '°F', min: 160, max: 230, optimal: { min: 180, max: 220 } },
+  // Display gauges (shown on dashboard)
+  engineTemp: { value: 95, unit: '°C', min: 60, max: 120, optimal: { min: 85, max: 105 } },
   batteryVoltage: { value: 12.6, unit: 'V', min: 11, max: 15, optimal: { min: 12.4, max: 14.7 } },
   tirePressure: { value: 34, unit: 'PSI', min: 25, max: 45, optimal: { min: 32, max: 36 } },
   brakeThickness: { value: 7.2, unit: 'mm', min: 2, max: 12, optimal: { min: 4, max: 12 } },
-  oilLevel: { value: 85, unit: '%', min: 0, max: 100, optimal: { min: 60, max: 100 } },
-  coolantLevel: { value: 92, unit: '%', min: 0, max: 100, optimal: { min: 70, max: 100 } },
+  oilLevel: { value: 45, unit: 'PSI', min: 20, max: 80, optimal: { min: 40, max: 60 } },
+  coolantLevel: { value: 88, unit: '°C', min: 60, max: 110, optimal: { min: 80, max: 100 } },
+};
+
+// Full ML model input features (14 features for predict-failure API)
+export const mlFeatures = {
+  engine_temp: 95,           // °C - Engine temperature
+  oil_pressure: 45,          // PSI - Oil pressure
+  coolant_temp: 88,          // °C - Coolant temperature
+  brake_pad_thickness: 7.2,  // mm - Brake pad thickness
+  battery_voltage: 12.6,     // V - Battery voltage
+  tire_pressure_fl: 34,      // PSI - Front left tire
+  tire_pressure_fr: 33,      // PSI - Front right tire
+  tire_pressure_rl: 32,      // PSI - Rear left tire
+  tire_pressure_rr: 34,      // PSI - Rear right tire
+  transmission_fluid_level: 75, // % - Transmission fluid level
+  suspension_wear: 25,       // % - Suspension wear percentage
+  odometer: 24567,           // km - Total mileage
+  fuel_efficiency: 12.5,     // km/L - Current fuel efficiency
+  vibration_level: 1.2,      // g - Vibration intensity
 };
 
 // Service Centers
