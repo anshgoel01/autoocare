@@ -112,10 +112,10 @@ export default function UserDashboard() {
             </div>
           </div>
         </div>
-        {/* Main Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Grid - Optimized for full width */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Health Score Card */}
-          <Card>
+          <Card className="h-fit">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 Vehicle Health
@@ -148,102 +148,102 @@ export default function UserDashboard() {
             isLoading={isPredicting}
             onCheckHealth={handleCheckHealth}
           />
+        </div>
 
-          {/* Telemetry Gauges */}
-          <div className="lg:col-span-2">
-            <h2 className="text-lg font-semibold mb-4">Real-time Telemetry</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <TelemetryGauge
-                label="Engine Temp"
-                value={telemetryData.engineTemp.value}
-                unit={telemetryData.engineTemp.unit}
-                min={telemetryData.engineTemp.min}
-                max={telemetryData.engineTemp.max}
-                optimal={telemetryData.engineTemp.optimal}
-                icon={<Thermometer className="w-4 h-4" />}
-              />
-              <TelemetryGauge
-                label="Battery"
-                value={telemetryData.batteryVoltage.value}
-                unit={telemetryData.batteryVoltage.unit}
-                min={telemetryData.batteryVoltage.min}
-                max={telemetryData.batteryVoltage.max}
-                optimal={telemetryData.batteryVoltage.optimal}
-                icon={<Battery className="w-4 h-4" />}
-              />
-              <TelemetryGauge
-                label="Tire Pressure"
-                value={telemetryData.tirePressure.value}
-                unit={telemetryData.tirePressure.unit}
-                min={telemetryData.tirePressure.min}
-                max={telemetryData.tirePressure.max}
-                optimal={telemetryData.tirePressure.optimal}
-                icon={<Gauge className="w-4 h-4" />}
-              />
-              <TelemetryGauge
-                label="Brake Thickness"
-                value={telemetryData.brakeThickness.value}
-                unit={telemetryData.brakeThickness.unit}
-                min={telemetryData.brakeThickness.min}
-                max={telemetryData.brakeThickness.max}
-                optimal={telemetryData.brakeThickness.optimal}
-                icon={<CircleDot className="w-4 h-4" />}
-              />
-              <TelemetryGauge
-                label="Oil Level"
-                value={telemetryData.oilLevel.value}
-                unit={telemetryData.oilLevel.unit}
-                min={telemetryData.oilLevel.min}
-                max={telemetryData.oilLevel.max}
-                optimal={telemetryData.oilLevel.optimal}
-                icon={<Droplets className="w-4 h-4" />}
-              />
-              <TelemetryGauge
-                label="Coolant"
-                value={telemetryData.coolantLevel.value}
-                unit={telemetryData.coolantLevel.unit}
-                min={telemetryData.coolantLevel.min}
-                max={telemetryData.coolantLevel.max}
-                optimal={telemetryData.coolantLevel.optimal}
-                icon={<Wind className="w-4 h-4" />}
-              />
-            </div>
-          </div>
-
-          {/* ML Predictions */}
-          <div className="lg:col-span-2">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-warning" />
-                Predictive Alerts
-              </h2>
-              <Badge variant="outline" className="font-normal">
-                {mlPredictions.length} Active
-              </Badge>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {mlPredictions.map((prediction) => (
-                <PredictionCard
-                  key={prediction.id}
-                  component={prediction.component}
-                  severity={prediction.severity}
-                  message={prediction.message}
-                  predictedDate={prediction.predictedDate}
-                  confidence={prediction.confidence}
-                />
-              ))}
-            </div>
+        {/* Telemetry Gauges - Full Width */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Real-time Telemetry</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            <TelemetryGauge
+              label="Engine Temp"
+              value={telemetryData.engineTemp.value}
+              unit={telemetryData.engineTemp.unit}
+              min={telemetryData.engineTemp.min}
+              max={telemetryData.engineTemp.max}
+              optimal={telemetryData.engineTemp.optimal}
+              icon={<Thermometer className="w-4 h-4" />}
+            />
+            <TelemetryGauge
+              label="Battery"
+              value={telemetryData.batteryVoltage.value}
+              unit={telemetryData.batteryVoltage.unit}
+              min={telemetryData.batteryVoltage.min}
+              max={telemetryData.batteryVoltage.max}
+              optimal={telemetryData.batteryVoltage.optimal}
+              icon={<Battery className="w-4 h-4" />}
+            />
+            <TelemetryGauge
+              label="Tire Pressure"
+              value={telemetryData.tirePressure.value}
+              unit={telemetryData.tirePressure.unit}
+              min={telemetryData.tirePressure.min}
+              max={telemetryData.tirePressure.max}
+              optimal={telemetryData.tirePressure.optimal}
+              icon={<Gauge className="w-4 h-4" />}
+            />
+            <TelemetryGauge
+              label="Brake Thickness"
+              value={telemetryData.brakeThickness.value}
+              unit={telemetryData.brakeThickness.unit}
+              min={telemetryData.brakeThickness.min}
+              max={telemetryData.brakeThickness.max}
+              optimal={telemetryData.brakeThickness.optimal}
+              icon={<CircleDot className="w-4 h-4" />}
+            />
+            <TelemetryGauge
+              label="Oil Level"
+              value={telemetryData.oilLevel.value}
+              unit={telemetryData.oilLevel.unit}
+              min={telemetryData.oilLevel.min}
+              max={telemetryData.oilLevel.max}
+              optimal={telemetryData.oilLevel.optimal}
+              icon={<Droplets className="w-4 h-4" />}
+            />
+            <TelemetryGauge
+              label="Coolant"
+              value={telemetryData.coolantLevel.value}
+              unit={telemetryData.coolantLevel.unit}
+              min={telemetryData.coolantLevel.min}
+              max={telemetryData.coolantLevel.max}
+              optimal={telemetryData.coolantLevel.optimal}
+              icon={<Wind className="w-4 h-4" />}
+            />
           </div>
         </div>
 
-        {/* Service Centers */}
+        {/* ML Predictions - Full Width */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-warning" />
+              Predictive Alerts
+            </h2>
+            <Badge variant="outline" className="font-normal">
+              {mlPredictions.length} Active
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            {mlPredictions.map((prediction) => (
+              <PredictionCard
+                key={prediction.id}
+                component={prediction.component}
+                severity={prediction.severity}
+                message={prediction.message}
+                predictedDate={prediction.predictedDate}
+                confidence={prediction.confidence}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Service Centers - Responsive Full Width */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Nearby Service Centers</h2>
             <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/service-centers')}>View All</Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {serviceCenters.slice(0, 3).map((center) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {serviceCenters.slice(0, 4).map((center) => (
               <ServiceCenterCard key={center.id} center={center} />
             ))}
           </div>
