@@ -23,9 +23,9 @@ import {
   X,
   Settings,
   ChevronRight,
-  Bell,
 } from 'lucide-react';
 import NotificationDropdown from '@/components/shared/NotificationDropdown';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 
 interface NavItem {
   label: string;
@@ -154,6 +154,7 @@ export default function ServiceCenterLayout({ children }: { children: React.Reac
           <span className="font-bold text-lg">Service Hub</span>
         </Link>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <NotificationDropdown />
           <Button
             variant="ghost"
@@ -215,6 +216,7 @@ export default function ServiceCenterLayout({ children }: { children: React.Reac
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <NotificationDropdown />
           </div>
         </header>
