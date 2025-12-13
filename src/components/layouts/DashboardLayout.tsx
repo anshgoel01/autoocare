@@ -18,7 +18,6 @@ import {
   MapPin,
   User,
   History,
-  Bell,
   LogOut,
   Menu,
   X,
@@ -26,6 +25,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import NotificationDropdown from '@/components/shared/NotificationDropdown';
+import ThemeToggle from '@/components/shared/ThemeToggle';
 
 interface NavItem {
   label: string;
@@ -158,6 +158,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="font-bold text-lg">AutoCare</span>
         </Link>
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <NotificationDropdown />
           <Button
             variant="ghost"
@@ -219,6 +220,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </h1>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeToggle />
             <NotificationDropdown />
           </div>
         </header>

@@ -68,48 +68,77 @@
   }
 
   .dark {
-    --background: 222 47% 6%;
-    --foreground: 210 40% 98%;
+    /* Background: Dark gray/blue as requested */
+    --background: 222 47% 7%;
+    --foreground: 215 28% 94%;
 
-    --card: 222 47% 9%;
-    --card-foreground: 210 40% 98%;
+    /* Cards: Slightly lighter dark */
+    --card: 217 33% 12%;
+    --card-foreground: 215 28% 94%;
 
-    --popover: 222 47% 9%;
-    --popover-foreground: 210 40% 98%;
+    /* Popover: Match card styling */
+    --popover: 217 33% 12%;
+    --popover-foreground: 215 28% 94%;
 
-    --primary: 224 76% 48%;
+    /* Primary: Keep blue but brighter for dark bg */
+    --primary: 224 76% 52%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 222 47% 14%;
-    --secondary-foreground: 210 40% 98%;
+    /* Secondary */
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 215 28% 94%;
 
-    --muted: 222 47% 14%;
+    /* Muted */
+    --muted: 217 33% 17%;
     --muted-foreground: 215 20% 65%;
 
-    --accent: 24 95% 53%;
+    /* Accent: Brighter orange for visibility */
+    --accent: 24 100% 58%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 160 84% 39%;
+    /* Success: Brighter green for visibility */
+    --success: 160 84% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    /* Warning: Brighter for visibility */
+    --warning: 38 95% 55%;
     --warning-foreground: 0 0% 100%;
 
-    --destructive: 0 62% 50%;
-    --destructive-foreground: 210 40% 98%;
+    /* Destructive/Critical: Brighter red for visibility */
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --critical: 0 84% 60%;
+    --critical: 0 90% 60%;
     --critical-foreground: 0 0% 100%;
 
-    --border: 222 47% 18%;
-    --input: 222 47% 18%;
-    --ring: 224 76% 48%;
+    /* Borders: Subtle gray */
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 224 76% 52%;
 
-    --gauge-background: 222 47% 14%;
-    --gauge-fill: 224 76% 48%;
-    --gauge-warning: 38 92% 50%;
-    --gauge-critical: 0 84% 60%;
-    --gauge-success: 160 84% 39%;
+    /* Chart colors: Brighter for dark mode */
+    --chart-1: 224 76% 55%;
+    --chart-2: 24 100% 58%;
+    --chart-3: 160 84% 45%;
+    --chart-4: 38 95% 55%;
+    --chart-5: 0 90% 60%;
+
+    /* Sidebar */
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 215 28% 94%;
+    --sidebar-primary: 224 76% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 217 33% 15%;
+    --sidebar-accent-foreground: 215 28% 94%;
+    --sidebar-border: 217 33% 18%;
+    --sidebar-ring: 224 76% 55%;
+
+    /* Gauge */
+    --gauge-background: 217 33% 17%;
+    --gauge-fill: 224 76% 55%;
+    --gauge-warning: 38 95% 55%;
+    --gauge-critical: 0 90% 60%;
+    --gauge-success: 160 84% 45%;
   }
 }
 
@@ -118,13 +147,28 @@
     @apply border-border;
   }
 
+  /* Smooth theme transitions */
+  html {
+    @apply transition-colors duration-300;
+  }
+
   body {
-    @apply bg-background text-foreground font-sans antialiased;
+    @apply bg-background text-foreground font-sans antialiased transition-colors duration-300;
     font-family: 'Inter', system-ui, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
+  }
+
+  /* Theme transition for all themeable elements */
+  .dashboard-card,
+  .sidebar-item,
+  header,
+  aside,
+  main,
+  nav {
+    @apply transition-colors duration-300;
   }
 }
 
