@@ -5,6 +5,12 @@ import TelemetryGauge from '@/components/dashboard/TelemetryGauge';
 import PredictionCard from '@/components/dashboard/PredictionCard';
 import ServiceCenterCard from '@/components/dashboard/ServiceCenterCard';
 import FailureRiskCard from '@/components/dashboard/FailureRiskCard';
+import { 
+  HealthTrendChart, 
+  ComponentTrendChart, 
+  CostComparisonChart, 
+  MaintenanceTimeline 
+} from '@/components/charts';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +36,8 @@ import {
   Wind,
   Eye,
   Car,
+  BarChart3,
+  Activity,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -51,16 +59,14 @@ export default function UserDashboard() {
   );
 
   const handleCheckHealth = async () => {
-    // Map current telemetry to ML model input features
-    // In a real app, these would come from actual vehicle sensors
     await predict(mlFeatures);
   };
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-8 animate-fade-in">
         {/* Welcome Banner */}
-        <div className="gradient-primary rounded-2xl p-6 text-primary-foreground">
+        <div className="gradient-primary rounded-2xl p-6 text-primary-foreground shadow-glow">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold mb-1">
@@ -112,13 +118,17 @@ export default function UserDashboard() {
             </div>
           </div>
         </div>
-        {/* Main Grid - Optimized for full width */}
+
+        {/* Vehicle Health & ML Prediction Row */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* Health Score Card */}
-          <Card className="h-fit">
+          <Card className="shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                Vehicle Health
+                <span className="flex items-center gap-2">
+                  <Activity className="w-5 h-5 text-primary" />
+                  Vehicle Health
+                </span>
                 <Badge variant="outline" className="font-normal">
                   Updated 5 min ago
                 </Badge>
@@ -150,9 +160,30 @@ export default function UserDashboard() {
           />
         </div>
 
-        {/* Telemetry Gauges - Full Width */}
+        {/* Analytics Section */}
         <div>
-          <h2 className="text-lg font-semibold mb-4">Real-time Telemetry</h2>
+          <div className="flex items-center gap-2 mb-4">
+            <BarChart3 className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold">Vehicle Analytics</h2>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <HealthTrendChart />
+            <ComponentTrendChart />
+          </div>
+        </div>
+
+        {/* Cost Analysis & Timeline */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <CostComparisonChart />
+          <MaintenanceTimeline />
+        </div>
+
+        {/* Telemetry Gauges */}
+        <div>
+          <div className="flex items-center gap-2 mb-4">
+            <Gauge className="w-5 h-5 text-accent" />
+            <h2 className="text-lg font-semibold">Real-time Telemetry</h2>
+          </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             <TelemetryGauge
               label="Engine Temp"
@@ -211,7 +242,7 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* ML Predictions - Full Width */}
+        {/* ML Predictions */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold flex items-center gap-2">
@@ -236,7 +267,7 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Service Centers - Responsive Full Width */}
+        {/* Service Centers */}
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold">Nearby Service Centers</h2>
@@ -249,8 +280,8 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Service History - Using Real Bookings */}
-        <Card>
+        {/* Service History */}
+        <Card className="shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Recent Service History</CardTitle>
             <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/history')}>
