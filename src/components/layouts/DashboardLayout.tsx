@@ -23,6 +23,7 @@ import {
   X,
   Settings,
   ChevronRight,
+  Brain,
 } from 'lucide-react';
 import NotificationDropdown from '@/components/shared/NotificationDropdown';
 import ThemeToggle from '@/components/shared/ThemeToggle';
@@ -35,6 +36,7 @@ interface NavItem {
 
 const userNavItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+  { label: 'AI Predictions', href: '/dashboard/ai-predictions', icon: Brain },
   { label: 'Service Centers', href: '/dashboard/service-centers', icon: MapPin },
   { label: 'Service History', href: '/dashboard/history', icon: History },
   { label: 'Profile', href: '/dashboard/profile', icon: User },

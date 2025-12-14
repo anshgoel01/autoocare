@@ -12,6 +12,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import UserDashboard from "./pages/UserDashboard";
+import MLPredictionsPage from "./pages/MLPredictionsPage";
 import ServiceCentersPage from "./pages/ServiceCentersPage";
 import ServiceHistoryPage from "./pages/ServiceHistoryPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -60,6 +61,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute allowedRole="vehicle_owner">
             <UserDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/ai-predictions"
+        element={
+          <ProtectedRoute allowedRole="vehicle_owner">
+            <MLPredictionsPage />
           </ProtectedRoute>
         }
       />
