@@ -521,3 +521,83 @@ export function getBookingStatusColor(status: string): string {
     default: return 'bg-muted text-muted-foreground border-muted';
   }
 }
+
+// ============= CHART DATA FOR DASHBOARDS =============
+
+// Vehicle Health History (Last 6 Months)
+export const healthTrendData = [
+  { month: 'Jul', score: 92, engine: 95, brakes: 88, battery: 96 },
+  { month: 'Aug', score: 90, engine: 94, brakes: 85, battery: 95 },
+  { month: 'Sep', score: 88, engine: 93, brakes: 82, battery: 94 },
+  { month: 'Oct', score: 89, engine: 93, brakes: 80, battery: 95 },
+  { month: 'Nov', score: 86, engine: 92, brakes: 78, battery: 94 },
+  { month: 'Dec', score: 87, engine: 92, brakes: 78, battery: 95 },
+];
+
+// Service Cost Comparison (Predicted vs Actual)
+export const costComparisonData = [
+  { service: 'Oil Change', predicted: 85, actual: 79 },
+  { service: 'Brake Service', predicted: 450, actual: 480 },
+  { service: 'Tire Rotation', predicted: 80, actual: 75 },
+  { service: 'Battery Check', predicted: 50, actual: 0 },
+  { service: 'Full Inspection', predicted: 320, actual: 299 },
+];
+
+// Maintenance Timeline Data
+export const maintenanceTimeline = [
+  { id: '1', date: '2024-06-10', service: 'Brake Pad Replacement', type: 'completed', cost: 450 },
+  { id: '2', date: '2024-08-22', service: 'Tire Rotation', type: 'completed', cost: 90 },
+  { id: '3', date: '2024-10-15', service: 'Full Inspection', type: 'completed', cost: 299 },
+  { id: '4', date: '2024-12-28', service: 'Scheduled Maintenance', type: 'upcoming', cost: 200 },
+  { id: '5', date: '2025-02-15', service: 'Battery Service', type: 'predicted', cost: 150 },
+];
+
+// Daily Booking Trends (Last 30 Days)
+export const bookingTrendsData = Array.from({ length: 30 }, (_, i) => {
+  const date = new Date();
+  date.setDate(date.getDate() - (29 - i));
+  return {
+    date: date.toISOString().split('T')[0],
+    day: date.getDate(),
+    bookings: Math.floor(Math.random() * 8) + 3,
+    completed: Math.floor(Math.random() * 6) + 2,
+  };
+});
+
+// Monthly Revenue Data
+export const revenueData = [
+  { month: 'Jul', revenue: 42500, target: 40000 },
+  { month: 'Aug', revenue: 45200, target: 42000 },
+  { month: 'Sep', revenue: 48900, target: 45000 },
+  { month: 'Oct', revenue: 52300, target: 48000 },
+  { month: 'Nov', revenue: 55800, target: 52000 },
+  { month: 'Dec', revenue: 49200, target: 55000 },
+];
+
+// Service Type Distribution
+export const serviceTypeData = [
+  { name: 'Oil Change', value: 28, color: 'hsl(var(--chart-1))' },
+  { name: 'Brake Service', value: 22, color: 'hsl(var(--chart-2))' },
+  { name: 'Tire Service', value: 18, color: 'hsl(var(--chart-3))' },
+  { name: 'Inspection', value: 15, color: 'hsl(var(--chart-4))' },
+  { name: 'Other', value: 17, color: 'hsl(var(--chart-5))' },
+];
+
+// Peak Hours Heatmap Data
+export const peakHoursData = [
+  { day: 'Mon', hours: [2, 4, 6, 8, 7, 5, 3, 2] },
+  { day: 'Tue', hours: [3, 5, 7, 9, 8, 6, 4, 3] },
+  { day: 'Wed', hours: [4, 6, 8, 9, 9, 7, 5, 4] },
+  { day: 'Thu', hours: [3, 5, 7, 8, 8, 6, 4, 3] },
+  { day: 'Fri', hours: [5, 7, 9, 10, 9, 7, 5, 4] },
+  { day: 'Sat', hours: [6, 8, 9, 8, 6, 4, 2, 1] },
+];
+
+// Inventory by Category
+export const inventoryCategoryData = [
+  { category: 'Brakes', inStock: 45, lowStock: 12, outOfStock: 3 },
+  { category: 'Fluids', inStock: 203, lowStock: 25, outOfStock: 5 },
+  { category: 'Filters', inStock: 68, lowStock: 18, outOfStock: 8 },
+  { category: 'Electrical', inStock: 42, lowStock: 10, outOfStock: 2 },
+  { category: 'Engine', inStock: 35, lowStock: 15, outOfStock: 5 },
+];
