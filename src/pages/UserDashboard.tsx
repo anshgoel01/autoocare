@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import HealthScoreMeter from '@/components/dashboard/HealthScoreMeter';
 import ComponentHealthBar from '@/components/dashboard/ComponentHealthBar';
 import TelemetryGauge from '@/components/dashboard/TelemetryGauge';
 import PredictionCard from '@/components/dashboard/PredictionCard';
 import ServiceCenterCard from '@/components/dashboard/ServiceCenterCard';
-import FailureRiskCard from '@/components/dashboard/FailureRiskCard';
 import { 
   HealthTrendChart, 
   ComponentTrendChart, 
@@ -18,13 +16,11 @@ import {
   vehicleHealth, 
   telemetryData, 
   mlPredictions,
-  mlFeatures,
 } from '@/data/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useServiceCenters } from '@/hooks/useServiceCenters';
 import { useUserBookings } from '@/hooks/useBookings';
 import { useMyVehicle } from '@/hooks/useVehicles';
-import { usePrediction } from '@/hooks/usePrediction';
 import { 
   Thermometer, 
   Battery, 
@@ -38,6 +34,7 @@ import {
   Car,
   BarChart3,
   Activity,
+  Brain,
 } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import DashboardLayout from '@/components/layouts/DashboardLayout';
@@ -48,7 +45,6 @@ export default function UserDashboard() {
   const { serviceCenters } = useServiceCenters();
   const { bookings, hasActiveBooking, nextBooking } = useUserBookings();
   const { vehicle: primaryVehicle } = useMyVehicle();
-  const { predict, isLoading: isPredicting, result: predictionResult } = usePrediction();
   
   const userName = user?.name || user?.profile?.full_name || 'User';
   const firstName = userName.split(' ')[0];
@@ -57,10 +53,6 @@ export default function UserDashboard() {
     new Date(vehicleHealth.nextServiceDate), 
     new Date()
   );
-
-  const handleCheckHealth = async () => {
-    await predict(mlFeatures);
-  };
 
   return (
     <DashboardLayout>
@@ -119,27 +111,23 @@ export default function UserDashboard() {
           </div>
         </div>
 
-        {/* Vehicle Health & ML Prediction Row */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {/* Health Score Card */}
-          <Card className="shadow-sm hover:shadow-md transition-shadow">
+        {/* Component Health & AI Predictions Link */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+          {/* Component Health Card */}
+          <Card className="xl:col-span-2 shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <Activity className="w-5 h-5 text-primary" />
-                  Vehicle Health
+                  Component Health
                 </span>
                 <Badge variant="outline" className="font-normal">
                   Updated 5 min ago
                 </Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex justify-center">
-                <HealthScoreMeter score={vehicleHealth.overallScore} />
-              </div>
-              
-              <div className="space-y-3">
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {vehicleHealth.components.map((component) => (
                   <ComponentHealthBar
                     key={component.name}
@@ -152,12 +140,31 @@ export default function UserDashboard() {
             </CardContent>
           </Card>
 
-          {/* ML Failure Prediction Card */}
-          <FailureRiskCard
-            result={predictionResult}
-            isLoading={isPredicting}
-            onCheckHealth={handleCheckHealth}
-          />
+          {/* AI Predictions CTA Card */}
+          <Card className="shadow-sm hover:shadow-md transition-shadow border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-primary" />
+                AI Health Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Get ML-powered failure predictions and detailed component analysis for your vehicle.
+              </p>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Overall Score</span>
+                <span className="font-bold text-lg">{vehicleHealth.overallScore}/100</span>
+              </div>
+              <Button 
+                onClick={() => navigate('/dashboard/ai-predictions')} 
+                className="w-full gap-2"
+              >
+                <Brain className="w-4 h-4" />
+                Run AI Diagnosis
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Analytics Section */}
